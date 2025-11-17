@@ -8,7 +8,7 @@ import os
 
 st.set_page_config(page_title="AI Fabric Laundry Sorter", page_icon="Laundry", layout="centered")
 st.title("AI Fabric Laundry Sorter")
-st.markdown("Upload **any photo** — I’ll **zoom in 3.3×** to analyze the **fabric texture**.")
+st.markdown("Upload **any photo** of your clothing — I'll **zoom in** and analyze the fabric texture.")
 
 # ------------------- LOAD MODEL & METADATA -------------------
 @st.cache_resource
@@ -46,10 +46,11 @@ def load_model_and_metadata():
 
 model, transform, class_names, washing_recommendations = load_model_and_metadata()
 
-# ------------------- MAX ZOOM (30% center) -------------------
-def auto_zoom_ultra(image, zoom_factor=0.30):
+# ------------------- AUTO ZOOM FUNCTION -------------------
+def auto_zoom_closeup(image, zoom_factor=0.5):
     """
-    Crop to 30% of center → ~3.3× zoom
+    Crop center of image to simulate close-up.
+    zoom_factor=0.5 → keep 50% center (zoomed in 2x)
     """
     w, h = image.size
     crop_w = int(w * zoom_factor)
@@ -60,7 +61,8 @@ def auto_zoom_ultra(image, zoom_factor=0.30):
     bottom = top + crop_h
     return image.crop((left, top, right, bottom))
 
-def draw_zoom_box(image, zoom_factor=0.30):
+# Add red border to show zoomed area
+def draw_zoom_box(image, zoom_factor=0.5):
     draw = ImageDraw.Draw(image)
     w, h = image.size
     crop_w = int(w * zoom_factor)
@@ -69,7 +71,7 @@ def draw_zoom_box(image, zoom_factor=0.30):
     top = (h - crop_h) // 2
     right = left + crop_w
     bottom = top + crop_h
-    draw.rectangle([left, top, right, bottom], outline="#FF0000", width=4)
+    draw.rectangle([left, top, right, bottom], outline="red", width=3)
     return image
 
 # ------------------- INFERENCE -------------------
@@ -90,24 +92,24 @@ uploaded = st.file_uploader("Upload clothing photo", type=["jpg", "jpeg", "png"]
 if uploaded:
     original = Image.open(uploaded)
     
-    # Show original with RED zoom box
+    # Show original with zoom box
     img_with_box = original.copy()
-    img_with_box = draw_zoom_box(img_with_box, zoom_factor=0.30)
+    img_with_box = draw_zoom_box(img_with_box, zoom_factor=0.5)
     st.image(img_with_box, caption="Original + Zoom Area (Red Box)", use_column_width=True)
 
-    # ULTRA ZOOM
-    zoomed = auto_zoom_ultra(original, zoom_factor=0.30)
-    st.image(zoomed, caption="Analyzing This Ultra Close-Up (3.3× Zoom)", use_column_width=True)
+    # Auto zoom
+    zoomed = auto_zoom_closeup(original, zoom_factor=0.5)
+    st.image(zoomed, caption="Analyzing This Close-Up", use_column_width=True)
 
-    with st.spinner("Scanning fabric fibers..."):
+    with st.spinner("Analyzing fabric texture..."):
         fabric, prob, rec = predict(zoomed)
 
     st.success("Analysis Complete!")
     st.markdown(f"### **{fabric}**")
     st.markdown(f"**Confidence**: `{prob:.1f}%`")
 
-    if prob < 75:
-        st.warning("Low confidence – try a photo with visible texture (no blur).")
+    if prob < 70:
+        st.warning("Low confidence – try a clearer or closer photo.")
 
     st.info(f"**Laundry Instructions**:\n\n{rec}")
 
@@ -122,4 +124,4 @@ if uploaded:
                 st.write(f"- **{f}**: {p:.1f}%")
 
 st.markdown("---")
-st.caption("ConvNeXt Tiny • 90.9% Accuracy • 3.3× Ultra Zoom for Micro-Texture Detection")
+st.caption("ConvNeXt Tiny • 90.9% Accuracy • Auto Zoom for Better Texture Detection")
