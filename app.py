@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 st.title("AI Fabric Laundry Sorter")
-st.markdown("Upload a **close-up photo** of your clothing fabric. I'll tell you the **material** and **how to wash it safely**.")
+st.markdown("Upload a **close-up photo** of your clothing fabric. I will tell you the **material** and **how to wash it safely**.")
 
 # -------------------------------
 # 2. Load Model & Metadata
@@ -24,7 +24,7 @@ st.markdown("Upload a **close-up photo** of your clothing fabric. I'll tell you 
 @st.cache_resource
 def load_model_and_metadata():
     # Paths
-    model_path = "fabric_laundry_sorter_v1.pth"
+    model_path = "best_convnext_tiny_fabric.pth"
     meta_path = "metadata.json"
 
     # Load metadata
